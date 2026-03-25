@@ -419,30 +419,7 @@ def _answer_question(question: str, condition_data: dict, data: dict) -> str:
         if "bacterial" in overview:
             return "Bacterial infections can be contagious. Practice good hygiene and follow doctor guidance on isolation."
         return "Check if it's viral or bacterial for contagion info. Most improve within days with care."
-
-    # Food/diet questions
-    if any(word in q for word in ["food", "foods", "eat", "diet", "meal", "drink", "nutrition"]):
-        home_care_text = " ".join(condition_data.get("homeCare", [])).lower()
-        has_sore_throat = "throat" in home_care_text
-        has_stomach = any(term in home_care_text for term in ["diarrhea", "vomiting", "stomach", "nausea"])
-
-        if has_stomach:
-            return (
-                "Choose light foods like rice, bananas, toast, crackers, and soups. "
-                "Take small frequent sips of water or oral rehydration fluids, and avoid oily, spicy, and dairy-heavy meals until better."
-            )
-
-        if has_sore_throat:
-            return (
-                "Warm, soft foods usually help: soups, porridge, warm tea with honey, yogurt, and fruits rich in vitamin C. "
-                "Drink plenty of fluids and avoid very cold, very spicy, or fried foods if they irritate your throat."
-            )
-
-        return (
-            "Good options are warm soups, fruits, cooked vegetables, protein-rich light meals, and plenty of fluids. "
-            "Avoid alcohol, very oily foods, and very spicy foods while recovering."
-        )
-
+    
     # Symptom relief
     if any(word in q for word in ["relief", "better", "improve", "feel", "help", "ease"]):
         home_care = condition_data.get("homeCare", [])
