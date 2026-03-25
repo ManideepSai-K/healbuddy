@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>HealBuddy – Symptoms</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+<h2>HealBuddy</h2>
+<p>AI-assisted symptom insights and triage</p>
+</header>
+
+<div class="container">
+
+<h2>Describe Your Symptoms</h2>
+<p>Search or select from below. Age & duration are optional.</p>
+
+<div class="input-row">
+<div class="field">
+<label for="symptomSearch">🔍 Search symptoms</label>
+<input id="symptomSearch" type="text" placeholder="e.g. fever, cough...">
+</div>
+</div>
+
+<div class="input-row">
+<div class="field">
+<label for="age">Age <span class="optional">(optional)</span></label>
+<input id="age" type="number" min="1" max="120" placeholder="e.g. 24">
+</div>
+
+<div class="field">
+<label for="duration">Duration <span class="optional">(optional)</span></label>
+<select id="duration">
+<option value="">Select duration</option>
+<option value="1">Less than 24 hours</option>
+<option value="2">1–2 days</option>
+<option value="3">3–5 days</option>
+<option value="6">More than 5 days</option>
+</select>
+</div>
+</div>
+
+<div class="chips" id="chips"></div>
+
+<textarea id="notes" placeholder="Example: started yesterday, mild sore throat, no allergy history"></textarea>
+
+<button class="btn" onclick="goResult()">Analyze Symptoms</button>
+
+</div>
+
+<footer>
+Educational use only • Not a medical diagnosis
+</footer>
+
+<script src="symptoms.js"></script>
+
+</body>
+</html>

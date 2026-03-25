@@ -1,0 +1,436 @@
+{
+    "disclaimer": "This assistant provides educational guidance only and is not a diagnosis. For severe, persistent, or worsening symptoms, consult a licensed doctor.",
+    "urgentSymptoms": ["Breathing Difficulty", "Chest Pain", "Unconscious", "Severe Bleeding"],
+    "symptomGroups": {
+        "respiratory": ["Cold", "Cough", "Sore Throat", "Breathing Difficulty", "Congestion", "Runny Nose", "Wheezing", "Shortness of Breath"],
+        "digestive": ["Stomach Pain", "Nausea", "Vomiting", "Diarrhea", "Acidity", "Bloating", "Loss of Appetite"],
+        "systemic": ["Fever", "Body Pain", "Headache", "Fatigue", "Chills", "Weakness", "Brain Fog", "Dizziness"],
+        "urinary": ["Burning Urination", "Back Pain", "Frequent Urination", "Lower Abdominal Pain"],
+        "skin": ["Rash", "Itching", "Hives", "Swelling", "Redness"],
+        "musculoskeletal": ["Joint Pain", "Muscle Stiffness"],
+        "other": ["Chest Pain"]
+    },
+    "severityKeywords": {
+        "severe": 0.3,
+        "unbearable": 0.35,
+        "intense": 0.25,
+        "excruciating": 0.4,
+        "mild": -0.2,
+        "slight": -0.15,
+        "managed": -0.1,
+        "worse": 0.2,
+        "worsening": 0.2,
+        "improving": -0.15,
+        "blood": 0.3,
+        "unconscious": 0.4,
+        "faint": 0.35,
+        "urgent": 0.25,
+        "persistent": 0.15,
+        "sudden": 0.15,
+        "sharp": 0.2,
+        "throbbing": 0.15,
+        "spreading": 0.2,
+        "cannot": 0.25
+    },
+    "conditions": [
+        {
+            "name": "Common Cold",
+            "overview": "A mild viral upper-respiratory infection spread by airborne droplets.",
+            "symptoms": ["Cold", "Cough", "Sore Throat", "Headache", "Fatigue", "Runny Nose", "Congestion"],
+            "severity": "mild",
+            "category": "respiratory",
+            "durationExpected": "7-10 days",
+            "followUp": ["Are symptoms worse in morning or evening?", "Any recent travel or sick contacts?"],
+            "homeCare": [
+                "Drink warm fluids (tea, soup) to soothe throat and hydrate.",
+                "Take over-the-counter pain relievers (ibuprofen 400-600mg every 6-8 hours).",
+                "Use saline nasal drops or neti pot for congestion.",
+                "Get 7-9 hours of sleep to support immune function.",
+                "Gargle with salt water (1/2 tsp salt in 8oz warm water) 3x daily."
+            ],
+            "doctorWhen": [
+                "Symptoms last longer than 10 days or worsen after 5 days.",
+                "High fever (>102°F) or severe throat pain.",
+                "Cough produces colored phlegm or breathing becomes difficult.",
+                "Signs of secondary infection (ear pain, sinus pressure)."
+            ],
+            "timeline": "Monitor for 3–5 days. Improve by day 5–7, resolve by day 10."
+        },
+        {
+            "name": "Flu-like Illness",
+            "overview": "Viral infection (likely influenza) causing systemic symptoms and fever.",
+            "symptoms": ["Fever", "Body Pain", "Cough", "Fatigue", "Headache", "Chills", "Weakness"],
+            "severity": "moderate",
+            "category": "systemic",
+            "durationExpected": "3-7 days",
+            "followUp": ["Any close contacts with confirmed flu?", "Vaccination status?"],
+            "homeCare": [
+                "Rest: Take 3–5 days off work or school to prevent spread.",
+                "Hydration: Drink 8-10 glasses of water, warm tea, or broth daily.",
+                "Fever management: Use acetaminophen (500mg every 6 hours) or ibuprofen (400mg every 6-8 hours).",
+                "Humidifier: Use a cool-mist humidifier to ease congestion and cough.",
+                "Nutrition: Eat light foods (broth, rice, eggs) when appetite returns."
+            ],
+            "doctorWhen": [
+                "Fever persists beyond 5 days or spikes again after 24 hours fever-free.",
+                "Difficulty breathing or chest pain develops.",
+                "Severe weakness, confusion, or persistent vomiting.",
+                "High-risk groups (elderly, pregnant, chronic illness)."
+            ],
+            "timeline": "Peak symptoms days 1–3. Gradual improvement by day 5. Full recovery 7–10 days."
+        },
+        {
+            "name": "Acute Gastritis / Acidity",
+            "overview": "Stomach lining inflammation causing burning sensation, often acid-reflux related.",
+            "symptoms": ["Acidity", "Stomach Pain", "Nausea", "Vomiting", "Bloating"],
+            "severity": "mild",
+            "category": "digestive",
+            "durationExpected": "1-3 days with treatment",
+            "followUp": ["Any recent spicy or fatty meals?", "History of GERD or ulcers?"],
+            "homeCare": [
+                "Avoid: Spicy, fried, fatty foods; caffeine; alcohol; chocolate.",
+                "Eat: Small, frequent meals (every 2–3 hours) of bland foods.",
+                "Antacids: Take over-the-counter antacids (Tums, Rolaids) after meals.",
+                "Elevate: Sleep with head elevated 30–45 degrees.",
+                "Wait 2–3 hours after eating before lying down."
+            ],
+            "doctorWhen": [
+                "Pain is severe or recurs after 3 days of home care.",
+                "Vomiting persists or contains blood.",
+                "Difficulty swallowing or signs of bleeding."
+            ],
+            "timeline": "Rapid relief with antacids (30 min–2 hours). Full recovery 1–3 days."
+        },
+        {
+            "name": "Food Poisoning",
+            "overview": "Acute digestive infection from contaminated food or water.",
+            "symptoms": ["Stomach Pain", "Nausea", "Vomiting", "Diarrhea", "Fever"],
+            "severity": "moderate",
+            "category": "digestive",
+            "durationExpected": "1-3 days",
+            "followUp": ["What did you eat in last 12 hours?", "Anyone else sick after same meal?"],
+            "homeCare": [
+                "Oral Rehydration: Start with small sips of water, coconut water, or sports drinks.",
+                "Electrolyte solution: Mix 6 tsp sugar + 1/2 tsp salt in 1L water; drink 200ml every 1–2 hours.",
+                "Food progression: Start with crackers, toast, rice; avoid dairy and high-fiber foods for 24 hours.",
+                "Rest: Avoid strenuous activity; let your body heal.",
+                "Track output: Monitor urine color (dark = dehydration)."
+            ],
+            "doctorWhen": [
+                "Severe dehydration signs: dark urine, dizziness, no urination for 8+ hours.",
+                "Diarrhea contains blood or lasts >3 days.",
+                "High fever (>102°F) or severe abdominal pain.",
+                "Signs of sepsis: rapid heartbeat, confusion."
+            ],
+            "timeline": "Vomiting subsides 12–24 hours. Diarrhea resolves 24–72 hours. Weakness may persist 1 week."
+        },
+        {
+            "name": "Urinary Tract Infection (UTI)",
+            "overview": "Bacterial infection of bladder or urethra causing burning urination.",
+            "symptoms": ["Burning Urination", "Frequent Urination", "Lower Abdominal Pain", "Fever"],
+            "severity": "moderate",
+            "category": "urinary",
+            "durationExpected": "1-3 days with antibiotics",
+            "followUp": ["Any fever or back pain?", "Previous UTI history?"],
+            "homeCare": [
+                "Hydration: Drink 2–3 liters of water daily to flush bacteria.",
+                "Cranberry juice: May help prevent recurrence (not cure active infection).",
+                "Urination: Don't hold it; empty bladder fully each time.",
+                "Heat: Apply warm compress to lower abdomen for pain relief.",
+                "Hygiene: Wipe front to back; avoid douching."
+            ],
+            "doctorWhen": [
+                "Symptoms persist beyond 24 hours despite hydration.",
+                "Fever or back pain (suggests kidney involvement).",
+                "Pregnancy or signs of severe infection.",
+                "Inability to urinate despite urge."
+            ],
+            "timeline": "With antibiotics, improvement within 24–48 hours. Full resolution 3–7 days."
+        },
+        {
+            "name": "Allergic Rhinitis (Hay Fever)",
+            "overview": "Allergic reaction causing nasal and respiratory inflammation.",
+            "symptoms": ["Runny Nose", "Congestion", "Cough", "Itching", "Headache"],
+            "severity": "mild",
+            "category": "respiratory",
+            "durationExpected": "Days to weeks (seasonal)",
+            "followUp": ["Known allergen triggers?", "Seasonal pattern?"],
+            "homeCare": [
+                "Antihistamines: Take cetirizine (Zyrtec) or loratadine (Claritin) daily.",
+                "Nasal spray: Use saline or corticosteroid nasal spray.",
+                "Avoid triggers: Keep windows closed during high pollen; shower after outdoor time.",
+                "HEPA filter: Use in bedroom to reduce allergen exposure.",
+                "Decongestants: Use only short-term (3–5 days max) to avoid rebound."
+            ],
+            "doctorWhen": [
+                "Symptoms interfere with sleep or work despite OTC treatment.",
+                "Wheezing or signs of asthma develop.",
+                "Sinus infection suspected (thick colored discharge, facial pain)."
+            ],
+            "timeline": "OTC meds provide relief within 30 min–1 hour. Duration depends on allergen exposure."
+        },
+        {
+            "name": "Bronchitis",
+            "overview": "Inflammation of large airways producing persistent productive cough.",
+            "symptoms": ["Cough", "Fever", "Fatigue", "Body Pain", "Shortness of Breath"],
+            "severity": "moderate",
+            "category": "respiratory",
+            "durationExpected": "2-3 weeks",
+            "followUp": ["Smoker or secondhand smoke exposure?", "Cough produces mucus?"],
+            "homeCare": [
+                "Humidifier: Use cool-mist to ease airway irritation.",
+                "Expectorant: Take guaifenesin (Mucinex) to thin mucus.",
+                "Cough drops: Use honey lozenges or sugar-free cough drops.",
+                "Warm fluids: Tea with honey and lemon soothes throat.",
+                "Avoid irritants: No smoking or secondhand smoke; avoid dusty environments.",
+                "Rest: Sleep with extra pillows to ease breathing."
+            ],
+            "doctorWhen": [
+                "Cough persists beyond 3 weeks or worsens.",
+                "Coughing up blood or dark/green phlegm.",
+                "Severe breathlessness at rest or chest pain.",
+                "High fever (>102°F) for >3 days."
+            ],
+            "timeline": "Acute phase 1–2 weeks. Cough may linger 3–4 weeks. Preventive: quit smoking, avoid irritants."
+        },
+        {
+            "name": "Bacterial Throat Infection (Strep)",
+            "overview": "Strep throat causing severe throat pain and swollen tonsils.",
+            "symptoms": ["Sore Throat", "Fever", "Headache", "Body Pain", "Swelling"],
+            "severity": "moderate",
+            "category": "respiratory",
+            "durationExpected": "1-3 days with antibiotics",
+            "followUp": ["Any pus or white patches on tonsils?", "Difficulty swallowing?"],
+            "homeCare": [
+                "Pain relief: Acetaminophen (500mg) or ibuprofen (400mg) every 6–8 hours.",
+                "Throat soothing: Gargle with salt water (1/2 tsp salt in 8oz warm water) every 2–3 hours.",
+                "Lozenges: Use throat lozenges with numbing agents.",
+                "Soft foods: Eat ice cream, applesauce, pudding; avoid hot foods.",
+                "Rest: Adequate sleep supports immune response.",
+                "Hydration: Sip warm tea or room-temperature liquids."
+            ],
+            "doctorWhen": [
+                "Throat pain is severe or persists >48 hours.",
+                "Fever >102°F or difficulty swallowing.",
+                "Severe headache, stiff neck, or rash.",
+                "Any previous rheumatic fever (needs urgent care)."
+            ],
+            "timeline": "With antibiotics, pain relief within 24–48 hours. Resolution 7–10 days. Contagious 24 hours after starting antibiotics."
+        },
+        {
+            "name": "Migraine Headache",
+            "overview": "Severe throbbing headache, often one-sided with nausea.",
+            "symptoms": ["Headache", "Nausea", "Vomiting", "Fatigue", "Dizziness"],
+            "severity": "moderate",
+            "category": "systemic",
+            "durationExpected": "4-72 hours",
+            "followUp": ["Any aura (visual disturbance)?", "Known triggers (stress, hormones, foods)?"],
+            "homeCare": [
+                "Rest: Lie down in dark, quiet room; close curtains.",
+                "Temperature: Apply cold compress to head or warm compress to neck.",
+                "Medication: Use ibuprofen (400mg) or naproxen (220mg) at first symptom.",
+                "Hydration: Drink water; dehydration worsens migraines.",
+                "Avoid triggers: Identify and avoid personal triggers (caffeine, alcohol, MSG, skipped meals).",
+                "Acupressure: Press between thumb and forefinger for 5–10 minutes."
+            ],
+            "doctorWhen": [
+                "Migraine pattern changes (frequency, severity, location).",
+                "Worst headache of your life or sudden-onset severe headache.",
+                "Vision loss, weakness, or difficulty speaking.",
+                "Fever or stiff neck accompanies headache."
+            ],
+            "timeline": "Rest and meds provide relief in 1–6 hours. Full resolution 4–72 hours. Prevention is key (lifestyle, stress management)."
+        },
+        {
+            "name": "Viral Gastroenteritis (Stomach Flu)",
+            "overview": "Viral stomach infection causing vomiting, diarrhea, and cramping.",
+            "symptoms": ["Vomiting", "Diarrhea", "Stomach Pain", "Fever", "Nausea"],
+            "severity": "moderate",
+            "category": "digestive",
+            "durationExpected": "2-3 days",
+            "followUp": ["Any close contacts with similar illness?", "Recent travel?"],
+            "homeCare": [
+                "Oral Rehydration: Sip water, coconut water, or sports drinks in small amounts (2–3 oz every 15 min).",
+                "Electrolyte balance: Use WHO rehydration solution if available.",
+                "Progress to food: Start crackers → toast → rice → broth → bland meals over 24 hours.",
+                "Avoid: Dairy, fatty foods, high-fiber foods, and acidic drinks for 48 hours.",
+                "Rest: Separate bathroom use; wash hands after toilet.",
+                "Monitor: Track hydration; dark urine indicates dehydration."
+            ],
+            "doctorWhen": [
+                "Severe dehydration (dizziness, no urination >8 hours, dark urine).",
+                "Blood in vomit or stool.",
+                "Abdominal pain is severe or worsening.",
+                "Symptoms persist >3 days."
+            ],
+            "timeline": "Acute phase 12–24 hours. Improvement by 48 hours. Full recovery 2–3 days. Contagious for 24–48 hours after last symptom."
+        },
+        {
+            "name": "Tension Headache",
+            "overview": "Mild to moderate tension in head, scalp, or neck; most common headache type.",
+            "symptoms": ["Headache", "Muscle Stiffness", "Neck Pain", "Fatigue"],
+            "severity": "mild",
+            "category": "systemic",
+            "durationExpected": "30 min to 7 days",
+            "followUp": ["Stress level recently high?", "Neck/shoulder tension?"],
+            "homeCare": [
+                "Relaxation: Practice deep breathing, progressive muscle relaxation.",
+                "Heat: Apply heating pad to neck and shoulders for 20 minutes.",
+                "Massage: Self-massage temples, neck, and shoulder muscles.",
+                "Posture: Correct desk posture; ensure monitor at eye level.",
+                "Hydration: Drink water; mild dehydration triggers tension headaches.",
+                "Medication: Ibuprofen (400mg) or acetaminophen (500mg) if needed."
+            ],
+            "doctorWhen": [
+                "Headaches increase in frequency or severity.",
+                "New pattern or accompanied by other symptoms (vision changes, weakness).",
+                "Sudden onset severe headache (different from usual)."
+            ],
+            "timeline": "Usually resolve within hours with rest. Recurrent cases benefit from stress management and physical therapy."
+        },
+        {
+            "name": "Contact Dermatitis (Skin Rash)",
+            "overview": "Allergic skin reaction from contact with irritant or allergen.",
+            "symptoms": ["Rash", "Itching", "Redness", "Swelling"],
+            "severity": "mild",
+            "category": "skin",
+            "durationExpected": "1-3 weeks",
+            "followUp": ["New soap, detergent, or fabric?", "Recent outdoor exposure (plants)?"],
+            "homeCare": [
+                "Identify trigger: Avoid suspected irritant (soaps, metals, plants).",
+                "Cleanse: Wash affected area gently with fragrance-free soap.",
+                "Topical cream: Use hydrocortisone cream (1%) 3x daily.",
+                "Cool compress: Apply for 10 minutes to reduce itching.",
+                "Avoid scratching: Trim nails; wear soft clothing.",
+                "Moisturize: Use fragrance-free lotion after bathing."
+            ],
+            "doctorWhen": [
+                "Rash spreads rapidly or involves face/genitals.",
+                "Signs of infection (pus, warmth, increasing swelling).",
+                "Severe itching disturbs sleep or daily function.",
+                "No improvement after 1–2 weeks of self-care."
+            ],
+            "timeline": "Itching improves 24–48 hours with treatment. Rash fades over 1–3 weeks. Recurrence if trigger re-exposure."
+        },
+        {
+            "name": "Muscle Strain / Overexertion",
+            "overview": "Muscle soreness and pain from new activity or physical strain.",
+            "symptoms": ["Body Pain", "Muscle Stiffness", "Fatigue", "Weakness"],
+            "severity": "mild",
+            "category": "musculoskeletal",
+            "durationExpected": "3-7 days",
+            "followUp": ["Recent new exercise or activity?", "Pain localized or widespread?"],
+            "homeCare": [
+                "Rest: Avoid strenuous activity for 24–48 hours; light movement okay.",
+                "Ice: Apply ice pack for 15–20 minutes every 2–3 hours for first 48 hours.",
+                "Heat: After 48 hours, apply heat for 15–20 minutes to ease stiffness.",
+                "Compression: Use elastic bandage or sleeve for mild compression.",
+                "Elevation: Elevate affected limb if swelling.",
+                "OTC pain relief: Ibuprofen (400mg) or naproxen (220mg) if needed.",
+                "Gradual return: Resume activity slowly over 1–2 weeks."
+            ],
+            "doctorWhen": [
+                "Severe pain or inability to move.",
+                "Pain worsens after 5 days or doesn't improve after 2 weeks.",
+                "Swelling, warmth, or redness (signs of inflammation or infection).",
+                "Suspected fracture or severe strain (deformity, extreme pain)."
+            ],
+            "timeline": "Peak soreness 24–48 hours. Improvement begins day 3. Full recovery 3–7 days for mild strain, weeks for severe."
+        },
+        {
+            "name": "Asthma (Exercise or Allergic)",
+            "overview": "Airway narrowing causing wheezing, cough, or shortness of breath.",
+            "symptoms": ["Wheezing", "Shortness of Breath", "Cough", "Chest Pain"],
+            "severity": "moderate",
+            "category": "respiratory",
+            "durationExpected": "Minutes to hours (acute); lifelong (chronic)",
+            "followUp": ["History of asthma?", "Triggered by exercise, allergies, or cold air?"],
+            "homeCare": [
+                "Rescue inhaler: Use albuterol inhaler (if prescribed) at first wheeze.",
+                "Rest: Stop activity and sit upright.",
+                "Slow breathing: Practice deep, slow breathing to calm airways.",
+                "Trigger avoidance: Avoid known triggers (allergens, exercise in cold, air pollution).",
+                "Humidity: Use humidifier if dry environment triggers symptoms.",
+                "Emergency: Call 911 if no improvement after 15 minutes or severe distress."
+            ],
+            "doctorWhen": [
+                "First-time wheezing or shortness of breath.",
+                "Rescue inhaler not relieving symptoms.",
+                "Wheezing accompanied by chest pain or confusion.",
+                "Peak flow meter reading significantly lower than baseline."
+            ],
+            "timeline": "Acute attack resolves 15–30 min with inhaler. Require controller medication if frequent episodes. Prevention is key."
+        },
+        {
+            "name": "Anxiety or Panic Disorder",
+            "overview": "Excessive worry or sudden panic attacks with physical symptoms.",
+            "symptoms": ["Chest Pain", "Shortness of Breath", "Headache", "Dizziness", "Nausea"],
+            "severity": "mild",
+            "category": "systemic",
+            "durationExpected": "Minutes to hours",
+            "followUp": ["Recent stressor or trauma?", "Panic attacks recurrent?"],
+            "homeCare": [
+                "Breathing technique: 4–7–8 breathing (breathe 4 counts, hold 7, exhale 8).",
+                "Grounding: Use 5 senses (5 things you see, 4 you touch, 3 you hear, 2 you smell, 1 you taste).",
+                "Movement: Take a short walk or gentle stretching.",
+                "Limit caffeine: Reduce coffee, energy drinks, and sugar.",
+                "Sleep: Maintain consistent sleep schedule (7–9 hours).",
+                "Therapy: Consider CBT or mindfulness apps (Headspace, Calm)."
+            ],
+            "doctorWhen": [
+                "Panic attacks are frequent or intensifying.",
+                "Anxiety interferes with work, relationships, or quality of life.",
+                "Chest pain or shortness of breath is severe (rule out cardiac causes).",
+                "First-time panic attack (rule out medical causes)."
+            ],
+            "timeline": "Acute panic attack subsides 5–30 minutes. Anxiety management requires ongoing practice. Therapy/medication effective within weeks."
+        },
+        {
+            "name": "Sinusitis",
+            "overview": "Sinus inflammation causing congestion, facial pain, and sinus pressure.",
+            "symptoms": ["Congestion", "Headache", "Runny Nose", "Fatigue", "Cough"],
+            "severity": "mild",
+            "category": "respiratory",
+            "durationExpected": "1-2 weeks",
+            "followUp": ["Any facial pressure or upper tooth pain?", "Colored nasal discharge?"],
+            "homeCare": [
+                "Saline rinse: Use neti pot or saline spray 2–3x daily.",
+                "Decongestant: Pseudoephedrine (Sudafed) or oxymetazoline spray (short-term only).",
+                "Humidifier: Add moisture to air.",
+                "Heat compress: Apply warm compress to sinuses.",
+                "Hydration: Drink warm liquids; avoid alcohol.",
+                "Sleep elevation: Prop head with extra pillow."
+            ],
+            "doctorWhen": [
+                "Symptoms last >10 days or worsen after 5 days.",
+                "Severe facial or tooth pain.",
+                "High fever (>102°F) or signs of infection.",
+                "Vision changes or signs extending to eyes/brain."
+            ],
+            "timeline": "Self-limited viral sinusitis resolves 5–7 days. Bacterial may require antibiotics, 7–14 days to resolve."
+        },
+        {
+            "name": "Common Seasonal Allergy",
+            "overview": "Seasonal pollen allergy causing nasal and eye symptoms.",
+            "symptoms": ["Itching", "Runny Nose", "Congestion", "Fatigue"],
+            "severity": "mild",
+            "category": "skin",
+            "durationExpected": "Weeks to months (seasonal)",
+            "followUp": ["Specific time of year symptoms appear?", "History of hay fever?"],
+            "homeCare": [
+                "Antihistamines: Daily cetirizine (Zyrtec) or loratadine (Claritin).",
+                "Eye drops: Use antihistamine eye drops if eyes itch.",
+                "Trigger avoidance: Stay indoors during high pollen (early morning, windy days).",
+                "Shower: Wash hair and change clothes after outdoor time.",
+                "HEPA filter: Use in bedroom.",
+                "Saline rinse: Rinse nasal passages daily."
+            ],
+            "doctorWhen": [
+                "OTC medications ineffective.",
+                "Symptoms worsen or trigger asthma-like symptoms.",
+                "Consider allergy testing or prescription options."
+            ],
+            "timeline": "OTC meds provide relief within 1 hour. Season-dependent duration. Complete resolution when pollen dispersal ends."
+        }
+    ]
+}
