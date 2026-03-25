@@ -23,6 +23,9 @@ Health check:
 Prediction endpoint:
 - `POST http://127.0.0.1:8000/predict`
 
+Q&A endpoint:
+- `POST http://127.0.0.1:8000/ask`
+
 ## 3) Payload
 
 ```json
@@ -35,3 +38,20 @@ Prediction endpoint:
 ```
 
 The API trains an in-memory classifier from `../app/data.json` on startup and returns top predictions with confidence scores.
+
+## 4) Enable LLM answers (optional)
+
+By default, `/ask` uses the built-in knowledge base patterns.
+
+To enable LLM answers, set environment variables before starting the API:
+
+```powershell
+$env:LLM_API_KEY="your_api_key"
+$env:LLM_MODEL="gpt-4o-mini"
+$env:LLM_BASE_URL="https://api.openai.com/v1"
+uvicorn main:app --reload --port 8000
+```
+
+Notes:
+- If LLM is configured and available, `/ask` responds with `source: "llm"`.
+- If LLM is missing/unavailable, it automatically falls back to `source: "knowledge-base"`.

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 from pathlib import Path
 from typing import Any
+from urllib import error, request
 
 import numpy as np
 from fastapi import FastAPI
@@ -15,6 +17,10 @@ from sklearn.ensemble import RandomForestClassifier
 APP_DIR = Path(__file__).resolve().parent.parent / "app"
 DATA_FILE = APP_DIR / "data.json"
 RANDOM_SEED = 42
+LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini").strip()
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+LLM_TIMEOUT_SECS = float(os.getenv("LLM_TIMEOUT_SECS", "12"))
 
 
 class PredictRequest(BaseModel):
@@ -270,7 +276,7 @@ def predict(payload: PredictRequest) -> PredictResponse:
 
 @app.post("/ask", response_model=AskResponse)
 def ask(payload: AskRequest) -> AskResponse:
-    """Answer user questions about their condition using knowledge base."""
+    """Answer user questions using LLM when configured, with KB fallback."""
     question_lower = payload.question.lower()
     condition_name = payload.condition or ""
     data = load_data()
@@ -281,13 +287,81 @@ def ask(payload: AskRequest) -> AskResponse:
         {}
     )
     
-    # Pattern-based Q&A with knowledge base fallback
-    answer = _answer_question(question_lower, condition_data, data)
-    
+    source = "knowledge-base"
+    answer = _ask_with_llm(payload, condition_data)
+
+    if answer:
+        source = "llm"
+    else:
+        answer = _answer_question(question_lower, condition_data, data)
+
     return AskResponse(
         answer=answer,
-        source="knowledge-base"
+        source=source
     )
+
+
+def _ask_with_llm(payload: AskRequest, condition_data: dict[str, Any]) -> str | None:
+    """Call an OpenAI-compatible chat completion API. Returns None on any failure."""
+    if not LLM_API_KEY:
+        return None
+
+    condition_context = {
+        "condition": condition_data.get("name", payload.condition or "Unknown"),
+        "overview": condition_data.get("overview", ""),
+        "durationExpected": condition_data.get("durationExpected", ""),
+        "homeCare": condition_data.get("homeCare", []),
+        "doctorWhen": condition_data.get("doctorWhen", []),
+        "followUp": condition_data.get("followUp", []),
+        "timeline": condition_data.get("timeline", ""),
+    }
+
+    system_prompt = (
+        "You are HealBuddy, a cautious health guidance assistant. "
+        "Use simple language, be brief, and only provide general educational guidance. "
+        "Do not diagnose. If urgent red flags are possible, advise immediate in-person care. "
+        "Always end with a short safety note that this is not medical diagnosis."
+    )
+
+    user_prompt = (
+        f"User question: {payload.question.strip()}\n"
+        f"Predicted context: {json.dumps(condition_context, ensure_ascii=False)}\n"
+        f"User extra context: {(payload.context or '').strip()}"
+    )
+
+    body = {
+        "model": LLM_MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 260,
+    }
+
+    req = request.Request(
+        url=f"{LLM_BASE_URL}/chat/completions",
+        data=json.dumps(body).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {LLM_API_KEY}",
+        },
+        method="POST",
+    )
+
+    try:
+        with request.urlopen(req, timeout=LLM_TIMEOUT_SECS) as response:
+            raw = response.read().decode("utf-8")
+            parsed = json.loads(raw)
+            content = (
+                parsed.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "")
+                .strip()
+            )
+            return content or None
+    except (error.URLError, error.HTTPError, TimeoutError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError):
+        return None
 
 
 def _answer_question(question: str, condition_data: dict, data: dict) -> str:
