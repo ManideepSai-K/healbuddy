@@ -5,6 +5,7 @@ const durationDays = localStorage.getItem('durationDays') ? Number(localStorage.
 const API_BASE_URL = localStorage.getItem('apiBaseUrl') || 'http://127.0.0.1:8001';
 const API_FALLBACK_BASES = ['http://127.0.0.1:8001', 'http://127.0.0.1:8000'];
 const HISTORY_KEY = 'healbuddyHistory';
+const CHAT_HISTORY_KEY = 'healbuddyChatHistory';
 
 function getApiBaseCandidates() {
 	const candidates = [API_BASE_URL, ...API_FALLBACK_BASES];
@@ -178,6 +179,41 @@ function formatDateTime(value) {
 	return date.toLocaleString();
 }
 
+function getChatHistory() {
+	try {
+		const parsed = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+		return Array.isArray(parsed) ? parsed : [];
+	} catch (error) {
+		return [];
+	}
+}
+
+function saveChatHistory(entries) {
+	localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(entries.slice(-6)));
+}
+
+function appendChatMessage(role, content) {
+	const next = [...getChatHistory(), { role, content: String(content || '') }].slice(-6);
+	saveChatHistory(next);
+}
+
+function renderChatHistory(historyDiv) {
+	if (!historyDiv) return;
+	historyDiv.innerHTML = '';
+
+	for (const item of getChatHistory()) {
+		const msg = document.createElement('div');
+		const isUser = item.role === 'user';
+		msg.style.cssText = isUser
+			? 'margin:8px 0; padding:8px 12px; background:rgba(37,99,235,0.1); border-radius:8px;'
+			: 'margin:8px 0; padding:8px 12px; background:rgba(100,116,139,0.1); border-radius:8px;';
+		msg.innerHTML = `<strong>${isUser ? 'You' : 'HealBuddy'}:</strong> ${escapeHtml(toPlainLanguage(item.content || ''))}`;
+		historyDiv.appendChild(msg);
+	}
+
+	historyDiv.scrollTop = historyDiv.scrollHeight;
+}
+
 function renderLoading(resultNode) {
 	resultNode.innerHTML = `
 	<div class="card loading-card">
@@ -342,6 +378,8 @@ ${recentHistory.map(item => `<li><strong>${escapeHtml(formatDateTime(item.timest
 
 <button class="btn" onclick="location.href='index.html'">Check Another</button>
 `;
+
+renderChatHistory(document.getElementById('qaHistory'));
 } catch (error) {
 	resultNode.innerHTML = `
 	<div class="card">
@@ -367,6 +405,7 @@ const userMsg = document.createElement('div');
 userMsg.style.cssText = 'margin:8px 0; padding:8px 12px; background:rgba(37,99,235,0.1); border-radius:8px;';
 userMsg.innerHTML = `<strong>You:</strong> ${escapeHtml(question)}`;
 historyDiv.appendChild(userMsg);
+appendChatMessage('user', question);
 
 const loadingMsg = document.createElement('div');
 loadingMsg.style.cssText = 'margin:8px 0; padding:8px 12px; background:rgba(100,116,139,0.1); border-radius:8px; font-style:italic;';
@@ -377,13 +416,18 @@ try {
 	const result = await postWithApiFallback('/ask', {
 		question,
 		condition: predicted.condition,
-		context: predicted.context
+		context: predicted.context,
+		chatHistory: getChatHistory()
 	});
-	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> ${escapeHtml(toPlainLanguage(result.answer || 'I could not find an answer to that question.'))}`;
+	const answer = result.answer || 'I could not find an answer to that question.';
+	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> ${escapeHtml(toPlainLanguage(answer))}`;
 	loadingMsg.style.fontStyle = 'normal';
+	appendChatMessage('assistant', answer);
 } catch (err) {
-	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> I'm having trouble reaching my knowledge base. Please try again or check back later.`;
+	const fallbackMessage = `I'm having trouble reaching my knowledge base. Please try again or check back later.`;
+	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> ${fallbackMessage}`;
 	loadingMsg.style.fontStyle = 'normal';
+	appendChatMessage('assistant', fallbackMessage);
 }
 
 input.value = '';

@@ -4,7 +4,7 @@ import json
 import os
 import random
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from urllib import error, request
 
 import numpy as np
@@ -54,6 +54,12 @@ class AskRequest(BaseModel):
     question: str
     condition: str | None = None
     context: str | None = ""
+    chatHistory: list["ChatMessage"] = Field(default_factory=list)
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
 
 
 class AskResponse(BaseModel):
@@ -323,16 +329,30 @@ def _ask_with_llm(payload: AskRequest, condition_data: dict[str, Any]) -> str | 
         "Always end with a short safety note that this is not medical diagnosis."
     )
 
-    user_prompt = (
-        f"User question: {payload.question.strip()}\n"
-        f"Predicted context: {json.dumps(condition_context, ensure_ascii=False)}\n"
-        f"User extra context: {(payload.context or '').strip()}"
-    )
+    history_messages = [
+        {
+            "role": message.role,
+            "content": message.content.strip()[:1200],
+        }
+        for message in payload.chatHistory[-6:]
+        if message.content and message.content.strip()
+    ]
+
+    user_prompt = payload.question.strip()
 
     body = {
         "model": LLM_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
+            {
+                "role": "system",
+                "content": (
+                    "Context about current result:\n"
+                    f"{json.dumps(condition_context, ensure_ascii=False)}\n"
+                    f"Extra user context: {(payload.context or '').strip()}"
+                ),
+            },
+            *history_messages,
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.3,

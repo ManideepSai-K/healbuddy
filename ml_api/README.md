@@ -26,6 +26,20 @@ Prediction endpoint:
 Q&A endpoint:
 - `POST http://127.0.0.1:8000/ask`
 
+Sample Q&A payload:
+
+```json
+{
+  "question": "Can I go to work with this?",
+  "condition": "Common Cold",
+  "context": "cough, runny nose",
+  "chatHistory": [
+    { "role": "user", "content": "How long does this last?" },
+    { "role": "assistant", "content": "Usually 7-10 days." }
+  ]
+}
+```
+
 ## 3) Payload
 
 ```json
