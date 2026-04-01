@@ -1,9 +1,10 @@
 const symptoms = JSON.parse(localStorage.getItem('symptoms')) || [];
 const notes = (localStorage.getItem('notes') || '').trim();
+const painAreas = JSON.parse(localStorage.getItem('painAreas') || '[]');
 const age = localStorage.getItem('age') ? Number(localStorage.getItem('age')) : null;
 const durationDays = localStorage.getItem('durationDays') ? Number(localStorage.getItem('durationDays')) : null;
-const API_BASE_URL = localStorage.getItem('apiBaseUrl') || 'http://127.0.0.1:8001';
-const API_FALLBACK_BASES = ['http://127.0.0.1:8001', 'http://127.0.0.1:8000'];
+const API_BASE_URL = localStorage.getItem('apiBaseUrl') || 'http://127.0.0.1:9018';
+const API_FALLBACK_BASES = ['http://127.0.0.1:9018', 'http://127.0.0.1:9017', 'http://127.0.0.1:9016', 'http://127.0.0.1:9015', 'http://127.0.0.1:9014', 'http://127.0.0.1:9013', 'http://127.0.0.1:9012', 'http://127.0.0.1:9000', 'http://127.0.0.1:8001', 'http://127.0.0.1:8000'];
 const HISTORY_KEY = 'healbuddyHistory';
 const CHAT_HISTORY_KEY = 'healbuddyChatHistory';
 
@@ -14,6 +15,8 @@ function getApiBaseCandidates() {
 
 async function postWithApiFallback(path, payload) {
 	let lastError = null;
+	let knowledgeBaseResponse = null;
+	let knowledgeBaseUrl = null;
 
 	for (const baseUrl of getApiBaseCandidates()) {
 		try {
@@ -31,11 +34,25 @@ async function postWithApiFallback(path, payload) {
 			}
 
 			const body = await response.json();
+
+			if (path === '/ask' && body && body.source === 'knowledge-base') {
+				if (!knowledgeBaseResponse) {
+					knowledgeBaseResponse = body;
+					knowledgeBaseUrl = baseUrl;
+				}
+				continue;
+			}
+
 			localStorage.setItem('apiBaseUrl', baseUrl);
 			return body;
 		} catch (error) {
 			lastError = error;
 		}
+	}
+
+	if (knowledgeBaseResponse) {
+		localStorage.setItem('apiBaseUrl', knowledgeBaseUrl || API_BASE_URL);
+		return knowledgeBaseResponse;
 	}
 
 	throw lastError || new Error('API unavailable');
@@ -197,6 +214,15 @@ function appendChatMessage(role, content) {
 	saveChatHistory(next);
 }
 
+function buildAssistantMessage(content, source) {
+	const safeContent = String(content || '');
+	if (source !== 'llm-config') {
+		return safeContent;
+	}
+
+	return `⚠️ LLM configuration issue\n${safeContent}`;
+}
+
 function renderChatHistory(historyDiv) {
 	if (!historyDiv) return;
 	historyDiv.innerHTML = '';
@@ -227,7 +253,71 @@ async function analyze() {
 const resultNode = document.getElementById('result');
 
 if (!symptoms.length) {
-	resultNode.innerHTML = "<div class='card'><h3>No symptoms selected</h3><p>Please go back and select symptoms first.</p><button class='btn' onclick=\"location.href='index.html'\">Back to Symptoms</button></div>";
+	if (!notes) {
+		resultNode.innerHTML = "<div class='card'><h3>No symptoms selected</h3><p>Please go back and select symptoms or describe your issue in the notes box.</p><button class='btn' onclick=\"location.href='index.html'\">Back to Symptoms</button></div>";
+		return;
+	}
+
+	renderLoading(resultNode);
+
+	try {
+		const context = [
+			painAreas.length ? `Pain areas: ${painAreas.join(', ')}` : '',
+			notes ? `Description: ${notes}` : '',
+			age ? `Age: ${age}` : '',
+			durationDays ? `Duration: ${durationDays} day(s)` : ''
+		].filter(Boolean).join(' | ');
+
+		const result = await postWithApiFallback('/ask', {
+			question: 'I have not selected symptoms. Based on my description, what might be going on and what should I do next?',
+			condition: '',
+			context,
+			chatHistory: getChatHistory()
+		});
+
+		const answer = result?.answer || 'I could not generate guidance from your description.';
+		localStorage.setItem('lastPrediction', JSON.stringify({
+			condition: '',
+			context
+		}));
+		appendChatMessage('assistant', answer);
+
+		resultNode.innerHTML = `
+<div class="card">
+<h3>Description-based guidance</h3>
+<p><strong>Your description:</strong> ${escapeHtml(notes)}</p>
+${painAreas.length ? `<p><strong>Pain areas:</strong> ${painAreas.map(escapeHtml).join(', ')}</p>` : ''}
+${age ? `<p><strong>Age:</strong> ${age}</p>` : ''}
+${durationDays ? `<p><strong>Duration:</strong> ${durationDays <= 1 ? 'Less than 24 hours' : `${durationDays} days`}</p>` : ''}
+<p><strong>HealBuddy:</strong> ${escapeHtml(toPlainLanguage(answer))}</p>
+<p class="muted">This is educational guidance, not a diagnosis.</p>
+</div>
+
+<div class="card">
+<h3>Got a follow-up question?</h3>
+<p>Ask HealBuddy for next steps based on your description.</p>
+<div style="display:flex; gap:8px; margin:12px 0;">
+<input type="text" id="qaInput" placeholder="e.g., What should I monitor in the next 24 hours?" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+<button onclick="submitQuestion()" style="padding:10px 14px; background:var(--primary); color:white; border:none; border-radius:var(--radius-sm); cursor:pointer; font-weight:600;">Ask</button>
+</div>
+<div id="qaHistory"></div>
+</div>
+
+<button class="btn" onclick="location.href='index.html'">Check Another</button>
+`;
+
+		renderChatHistory(document.getElementById('qaHistory'));
+	} catch (error) {
+		resultNode.innerHTML = `
+		<div class="card">
+			<h3>Unable to analyze description</h3>
+			<p>We couldn't process your notes right now. Try again or add symptoms.</p>
+			<p class="muted">${escapeHtml(error?.message || 'Unknown error')}</p>
+			<button class="btn" onclick="location.href='index.html'">Back to Symptoms</button>
+		</div>
+		`;
+	}
+
 	return;
 }
 
@@ -277,7 +367,7 @@ const currentEntry = {
 saveHistoryEntry(currentEntry);
 localStorage.setItem('lastPrediction', JSON.stringify({
 	condition: mlResponse?.predictedCondition || displayMatch?.name,
-	context: `${symptoms.join(', ')}${age ? ` | Age: ${age}` : ''}${durationDays ? ` | ${durationDays} days` : ''}`
+	context: `${symptoms.join(', ')}${painAreas.length ? ` | Pain areas: ${painAreas.join(', ')}` : ''}${age ? ` | Age: ${age}` : ''}${durationDays ? ` | ${durationDays} days` : ''}`
 }));
 const recentHistory = getHistory().slice(0, 5);
 
@@ -292,6 +382,7 @@ resultNode.innerHTML = `
 <div class="card">
 <h3>Your details</h3>
 <p><strong>Symptoms:</strong> ${symptoms.map(escapeHtml).join(', ')}</p>
+${painAreas.length ? `<p><strong>Pain areas:</strong> ${painAreas.map(escapeHtml).join(', ')}</p>` : ''}
 ${age ? `<p><strong>Age:</strong> ${age}</p>` : ''}
 ${durationDays ? `<p><strong>Duration:</strong> ${durationDays <= 1 ? 'Less than 24 hours' : `${durationDays} days`}</p>` : ''}
 ${notes ? `<p><strong>Notes:</strong> ${escapeHtml(notes)}</p>` : ''}
@@ -420,9 +511,11 @@ try {
 		chatHistory: getChatHistory()
 	});
 	const answer = result.answer || 'I could not find an answer to that question.';
-	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> ${escapeHtml(toPlainLanguage(answer))}`;
+	const source = result.source || 'knowledge-base';
+	const assistantMessage = buildAssistantMessage(answer, source);
+	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> ${escapeHtml(toPlainLanguage(assistantMessage))}`;
 	loadingMsg.style.fontStyle = 'normal';
-	appendChatMessage('assistant', answer);
+	appendChatMessage('assistant', assistantMessage);
 } catch (err) {
 	const fallbackMessage = `I'm having trouble reaching my knowledge base. Please try again or check back later.`;
 	loadingMsg.innerHTML = `<strong>HealBuddy:</strong> ${fallbackMessage}`;

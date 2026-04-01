@@ -47,7 +47,53 @@
 </div>
 </div>
 
+<div class="card">
+<h3>Pain Location Map <span class="optional">(optional)</span></h3>
+<p class="muted">Click the body areas where you feel pain or discomfort.</p>
+<div class="map-view-toggle" role="tablist" aria-label="Body map view">
+<button type="button" class="map-toggle-btn active" data-map-view="front">Front view</button>
+<button type="button" class="map-toggle-btn" data-map-view="back">Back view</button>
+</div>
+<div class="body-map-wrap compact">
+<div class="body-map-card body-map-panel active" data-map-panel="front">
+<p class="body-map-title">Front</p>
+<div class="body-map front" aria-label="Front body map">
+<button type="button" class="body-hotspot" data-area="Head" style="top:12%; left:50%;">Head</button>
+<button type="button" class="body-hotspot" data-area="Neck" style="top:21%; left:50%;">Neck</button>
+<button type="button" class="body-hotspot" data-area="Shoulders" style="top:28%; left:50%;">Shoulders</button>
+<button type="button" class="body-hotspot" data-area="Chest" style="top:36%; left:50%;">Chest</button>
+<button type="button" class="body-hotspot" data-area="Upper Abdomen" style="top:47%; left:50%;">Upper Abdomen</button>
+<button type="button" class="body-hotspot" data-area="Lower Abdomen" style="top:58%; left:50%;">Lower Abdomen</button>
+<button type="button" class="body-hotspot" data-area="Left Arm" style="top:42%; left:20%;">Left Arm</button>
+<button type="button" class="body-hotspot" data-area="Right Arm" style="top:42%; left:80%;">Right Arm</button>
+<button type="button" class="body-hotspot" data-area="Left Leg" style="top:79%; left:38%;">Left Leg</button>
+<button type="button" class="body-hotspot" data-area="Right Leg" style="top:79%; left:62%;">Right Leg</button>
+</div>
+</div>
+
+<div class="body-map-card body-map-panel" data-map-panel="back">
+<p class="body-map-title">Back</p>
+<div class="body-map back" aria-label="Back body map">
+<button type="button" class="body-hotspot" data-area="Back of Head" style="top:12%; left:50%;">Back of Head</button>
+<button type="button" class="body-hotspot" data-area="Upper Back" style="top:35%; left:50%;">Upper Back</button>
+<button type="button" class="body-hotspot" data-area="Lower Back" style="top:52%; left:50%;">Lower Back</button>
+<button type="button" class="body-hotspot" data-area="Left Back Shoulder" style="top:30%; left:28%;">Left Back Shoulder</button>
+<button type="button" class="body-hotspot" data-area="Right Back Shoulder" style="top:30%; left:72%;">Right Back Shoulder</button>
+<button type="button" class="body-hotspot" data-area="Left Hip" style="top:63%; left:38%;">Left Hip</button>
+<button type="button" class="body-hotspot" data-area="Right Hip" style="top:63%; left:62%;">Right Hip</button>
+<button type="button" class="body-hotspot" data-area="Back of Left Leg" style="top:79%; left:38%;">Back of Left Leg</button>
+<button type="button" class="body-hotspot" data-area="Back of Right Leg" style="top:79%; left:62%;">Back of Right Leg</button>
+</div>
+</div>
+</div>
+<p id="painAreaSummary" class="muted">No pain areas selected yet.</p>
+</div>
+
+<div class="card compact-card">
+<h3>Symptoms</h3>
 <div class="chips" id="chips"></div>
+<p id="painSuggestedSymptoms" class="muted"></p>
+</div>
 
 <textarea id="notes" placeholder="Example: started yesterday, mild sore throat, no allergy history"></textarea>
 

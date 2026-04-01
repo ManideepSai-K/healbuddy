@@ -17,10 +17,10 @@ from sklearn.ensemble import RandomForestClassifier
 APP_DIR = Path(__file__).resolve().parent.parent / "app"
 DATA_FILE = APP_DIR / "data.json"
 RANDOM_SEED = 42
-LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini").strip()
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
 LLM_TIMEOUT_SECS = float(os.getenv("LLM_TIMEOUT_SECS", "12"))
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b").strip()
+LAST_LLM_ERROR = ""
 
 
 class PredictRequest(BaseModel):
@@ -275,6 +275,16 @@ def health() -> dict[str, str]:
     return {"status": "ok", "modelVersion": model_bundle.meta["modelVersion"]}
 
 
+@app.get("/debug")
+def debug() -> dict:
+    return {
+        "llm_provider": "ollama",
+        "ollama_base_url": OLLAMA_BASE_URL,
+        "ollama_model": OLLAMA_MODEL,
+        "llm_last_error": LAST_LLM_ERROR[:240] if LAST_LLM_ERROR else "",
+    }
+
+
 @app.post("/predict", response_model=PredictResponse)
 def predict(payload: PredictRequest) -> PredictResponse:
     return model_bundle.predict(payload)
@@ -299,6 +309,14 @@ def ask(payload: AskRequest) -> AskResponse:
     if answer:
         source = "llm"
     else:
+        if LAST_LLM_ERROR:
+            return AskResponse(
+                answer=(
+                    f"Local model is unavailable. {LAST_LLM_ERROR[:220]} "
+                    "Start Ollama and run a model (example: `ollama run llama3.2:3b`), then retry."
+                ),
+                source="llm-error",
+            )
         answer = _answer_question(question_lower, condition_data, data)
 
     return AskResponse(
@@ -308,19 +326,12 @@ def ask(payload: AskRequest) -> AskResponse:
 
 
 def _ask_with_llm(payload: AskRequest, condition_data: dict[str, Any]) -> str | None:
-    """Call an OpenAI-compatible chat completion API. Returns None on any failure."""
-    if not LLM_API_KEY:
-        return None
+    """Call local Ollama API. Returns None on any failure."""
+    return _ask_with_ollama(payload, condition_data)
 
-    condition_context = {
-        "condition": condition_data.get("name", payload.condition or "Unknown"),
-        "overview": condition_data.get("overview", ""),
-        "durationExpected": condition_data.get("durationExpected", ""),
-        "homeCare": condition_data.get("homeCare", []),
-        "doctorWhen": condition_data.get("doctorWhen", []),
-        "followUp": condition_data.get("followUp", []),
-        "timeline": condition_data.get("timeline", ""),
-    }
+
+def _ask_with_ollama(payload: AskRequest, condition_data: dict[str, Any]) -> str | None:
+    global LAST_LLM_ERROR
 
     system_prompt = (
         "You are HealBuddy, a cautious health guidance assistant. "
@@ -329,43 +340,47 @@ def _ask_with_llm(payload: AskRequest, condition_data: dict[str, Any]) -> str | 
         "Always end with a short safety note that this is not medical diagnosis."
     )
 
-    history_messages = [
-        {
-            "role": message.role,
-            "content": message.content.strip()[:1200],
-        }
-        for message in payload.chatHistory[-6:]
-        if message.content and message.content.strip()
+    context_prompt = (
+        "Context about current result:\n"
+        f"{json.dumps({
+            'condition': condition_data.get('name', payload.condition or 'Unknown'),
+            'overview': condition_data.get('overview', ''),
+            'durationExpected': condition_data.get('durationExpected', ''),
+            'homeCare': condition_data.get('homeCare', []),
+            'doctorWhen': condition_data.get('doctorWhen', []),
+            'followUp': condition_data.get('followUp', []),
+            'timeline': condition_data.get('timeline', ''),
+        }, ensure_ascii=False)}\n"
+        f"Extra user context: {(payload.context or '').strip()}"
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": context_prompt},
     ]
 
-    user_prompt = payload.question.strip()
+    for message in payload.chatHistory[-6:]:
+        if message.content and message.content.strip():
+            messages.append({
+                "role": message.role,
+                "content": message.content.strip()[:1200],
+            })
+
+    messages.append({"role": "user", "content": payload.question.strip()})
 
     body = {
-        "model": LLM_MODEL,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {
-                "role": "system",
-                "content": (
-                    "Context about current result:\n"
-                    f"{json.dumps(condition_context, ensure_ascii=False)}\n"
-                    f"Extra user context: {(payload.context or '').strip()}"
-                ),
-            },
-            *history_messages,
-            {"role": "user", "content": user_prompt},
-        ],
-        "temperature": 0.3,
-        "max_tokens": 260,
+        "model": OLLAMA_MODEL,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "temperature": 0.3,
+        },
     }
 
     req = request.Request(
-        url=f"{LLM_BASE_URL}/chat/completions",
+        url=f"{OLLAMA_BASE_URL}/api/chat",
         data=json.dumps(body).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {LLM_API_KEY}",
-        },
+        headers={"Content-Type": "application/json"},
         method="POST",
     )
 
@@ -374,13 +389,21 @@ def _ask_with_llm(payload: AskRequest, condition_data: dict[str, Any]) -> str | 
             raw = response.read().decode("utf-8")
             parsed = json.loads(raw)
             content = (
-                parsed.get("choices", [{}])[0]
-                .get("message", {})
+                parsed.get("message", {})
                 .get("content", "")
                 .strip()
             )
+            LAST_LLM_ERROR = ""
             return content or None
-    except (error.URLError, error.HTTPError, TimeoutError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError):
+    except error.HTTPError as http_error:
+        try:
+            raw_error = http_error.read().decode("utf-8")
+        except Exception:
+            raw_error = str(http_error)
+        LAST_LLM_ERROR = f"HTTP {http_error.code}: {raw_error[:300]}"
+        return None
+    except (error.URLError, TimeoutError, json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
+        LAST_LLM_ERROR = str(exc)
         return None
 
 
